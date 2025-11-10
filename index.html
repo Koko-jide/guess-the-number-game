@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the number game</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="txt">
+        <h1>Number Guessing Game</h1>
+        <h2>Put in your guess for the random number that was selected from 1 - 100</h2>
+      </div>
+
+      <form id="guessForm" class="inpt" aria-label="Guess form">
+        <label for="guess">Enter your guess</label>
+        <input type="number" id="guess" name="number-guess" placeholder="1 - 100" min="1" max="100" inputmode="numeric" />
+        <button id="btn" type="submit">Submit Guess</button>
+        <button id="restart" type="button">Restart</button>
+      </form>
+
+      <div id="status" class="status">
+        <p id="message" aria-live="polite"></p>
+        <p id="attempts" aria-live="polite"></p>
+        <p id="history" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <script>
+      const guessInput = document.getElementById('guess');
+      const form = document.getElementById('guessForm');
+      const btn = document.getElementById('btn');
+      const restartBtn = document.getElementById('restart');
+      const message = document.getElementById('message');
+      const attemptsEl = document.getElementById('attempts');
+      const historyEl = document.getElementById('history');
+
+      // game state
+      let secretNumber;
+      let turn;
+      const maxTurns = 10;
+      let previousGuesses = [];
+
+      function initGame() {
+        secretNumber = Math.floor(Math.random() * 100) + 1;
+        turn = 1;
+        previousGuesses = [];
+        guessInput.disabled = false;
+        btn.disabled = false;
+        guessInput.value = '';
+        updateStatus();
+        show('Game started — enter a number between 1 and 100.', 'info');
+      }
+
+      function show(msg, type = '') {
+        message.textContent = msg;
+        message.className = type;
+      }
+
+      function updateStatus() {
+        attemptsEl.textContent = `Turns: ${turn}/${maxTurns} — Attempts remaining: ${maxTurns - turn + 1}`;
+        historyEl.textContent = previousGuesses.length ? `Previous guesses: ${previousGuesses.join(', ')}` : '';
+      }
+
+      function endGame() {
+        guessInput.disabled = true;
+        btn.disabled = true;
+        attemptsEl.textContent += ' — Game ended';
+      }
+
+      function resetGame() {
+        initGame();
+        guessInput.focus();
+      }
+
+      function checkGuess() {
+        const raw = guessInput.value.trim();
+        const guess = Number(raw);
+
+        if (raw === '' || Number.isNaN(guess)) {
+          show('Please enter a valid number between 1 and 100.', 'error');
+          return;
+        }
+        if (!Number.isInteger(guess)) {
+          show('Please enter an integer (no decimals).', 'error');
+          return;
+        }
+        if (guess < 1 || guess > 100) {
+          show('Your guess must be between 1 and 100.', 'error');
+          return;
+        }
+
+        previousGuesses.push(guess);
+        updateStatus();
+
+        if (guess === secretNumber) {
+          show(`🎉 Correct! The number was ${secretNumber}.`, 'success');
+          endGame();
+          return;
+        }
+
+        if (turn === maxTurns) {
+          show(`Game over — you've used all ${maxTurns} turns. The number was ${secretNumber}.`, 'error');
+          endGame();
+          return;
+        }
+
+        if (guess < secretNumber) {
+          show('Too low — try again.', 'info');
+        } else {
+          show('Too high — try again.', 'info');
+        }
+
+        turn += 1;
+        guessInput.value = '';
+        guessInput.focus();
+      }
+
+      // event wiring
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        checkGuess();
+      });
+
+      restartBtn.addEventListener('click', resetGame);
+
+      // start
+      initGame();
+      guessInput.focus();
+    </script>
+  </body>
+</html>
